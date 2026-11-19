@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusAI - আপনার স্মার্ট AI অ্যাসিস্ট্যান্ট</title>
+  <meta name="description" content="NexusAI এর সাথে বাংলা এবং ইংরেজিতে যেকোনো প্রশ্ন করুন, কোড লিখুন এবং তাৎক্ষণিক সমাধান পান।" />
+  <meta name="theme-color" content="#0f172a" />
+  
+  <!-- Tailwind CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Markdown & Syntax Highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Hind Siliguri', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', 'Hind Siliguri', sans-serif; }
+    .prose pre { background: #1e293b; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; position: relative; margin: 0.75rem 0; }
+    .prose code { font-family: monospace; font-size: 0.9em; }
+    .prose p { margin-bottom: 0.75rem; line-height: 1.7; }
+    .prose ul, .prose ol { margin-left: 1.5rem; margin-bottom: 0.75rem; list-style-type: disc; }
+    .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: #334155; color: #f8fafc; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 0.375rem; cursor: pointer; }
+    .copy-btn:hover { background: #475569; }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 h-screen flex overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-72 bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 fixed md:static inset-y-0 left-0 z-40 -translate-x-full md:translate-x-0">
+    <div class="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-2.5 font-bold text-xl tracking-tight text-emerald-600 dark:text-emerald-400">
+        <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm">AI</span>
+        <span>NexusAI</span>
+      </div>
+      <button onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800">✕</button>
+    </div>
+
+    <div class="p-3">
+      <button onclick="createNewChat()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium flex items-center justify-center gap-2 transition shadow-sm">
+        <span>+</span> <span id="new-chat-text">নতুন চ্যাট</span>
+      </button>
+    </div>
+
+    <div id="chat-history-list" class="flex-1 overflow-y-auto px-3 space-y-1">
+      <!-- Chat history items injected here -->
+    </div>
+
+    <div class="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+      <button onclick="clearAllChats()" class="w-full py-2 px-3 rounded-lg text-red-500 hover:bg-red-500/10 flex items-center gap-2 transition">
+        <span>🗑️</span> <span id="clear-history-text">সব হিস্ট্রি মুছুন</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Chat Area -->
+  <main class="flex-1 flex flex-col h-full relative">
+    <!-- Top Header -->
+    <header class="h-14 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800">☰</button>
+        <span class="font-semibold text-sm sm:text-base" id="header-title">NexusAI 2.5 Pro</span>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button onclick="toggleLanguage()" id="lang-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          English
+        </button>
+        <button onclick="toggleTheme()" id="theme-btn" class="p-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Theme">
+          ☀️
+        </button>
+      </div>
+    </header>
+
+    <!-- Messages Container -->
+    <div id="messages-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+      <!-- Welcome Screen -->
+      <div id="welcome-screen" class="max-w-2xl mx-auto mt-12 text-center space-y-6">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-600/10 text-emerald-500 flex items-center justify-center text-3xl font-bold border border-emerald-500/20">
+          AI
+        </div>
+        <h1 id="welcome-title" class="text-2xl sm:text-3xl font-bold">আজ আপনাকে কীভাবে সাহায্য করতে পারি?</h1>
+        <p id="welcome-sub" class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">যেকোনো প্রশ্ন করুন, কোড লিখুন, ইমেইল ড্রাফট করুন বা নতুন কিছু শিখুন।</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left pt-4" id="prompt-suggestions">
+          <!-- Prompt cards -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Box -->
+    <div class="p-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent dark:from-slate-950 dark:via-slate-950">
+      <div class="max-w-3xl mx-auto relative">
+        <form id="chat-form" onsubmit="handleSend(event)" class="flex items-end gap-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-2 shadow-lg focus-within:border-emerald-500 transition">
+          <textarea id="user-input" rows="1" placeholder="এখানে আপনার প্রশ্ন লিখুন..." class="w-full bg-transparent resize-none border-0 focus:ring-0 focus:outline-none px-3 py-2 max-h-40 text-sm sm:text-base" onkeydown="handleEnter(event)"></textarea>
+          <button type="submit" id="send-btn" class="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 transition shrink-0">
+            ➤
+          </button>
+        </form>
+        <p id="footer-disclaimer" class="text-center text-xs text-slate-400 mt-2">NexusAI ভুল তথ্য দিতে পারে। গুরুত্বপূর্ণ তথ্য যাচাই করে নিন।</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentLang = localStorage.getItem('nexus_lang') || 'bn';
+    let chats = JSON.parse(localStorage.getItem('nexus_chats')) || [];
+    let activeChatId = null;
+    let isGenerating = false;
+
+    const i18n = {
+      bn: {
+        newChat: 'নতুন চ্যাট',
+        clearHistory: 'সব হিস্ট্রি মুছুন',
+        welcomeTitle: 'আজ আপনাকে কীভাবে সাহায্য করতে পারি?',
+        welcomeSub: 'যেকোনো প্রশ্ন করুন, কোড লিখুন, ইমেইল ড্রাফট করুন বা নতুন কিছু শিখুন।',
+        placeholder: 'এখানে আপনার প্রশ্ন লিখুন...',
+        disclaimer: 'NexusAI ভুল তথ্য দিতে পারে। গুরুত্বপূর্ণ তথ্য যাচাই করে নিন।',
+        langSwitch: 'English',
+        prompts: [
+          { title: 'ব্যবসায়িক ইমেইল', desc: 'ক্লায়েন্টকে প্রজেক্ট আপডেট জানিয়ে একটি প্রফেশনাল ইমেইল লিখুন' },
+          { title: 'কোডিং সাহায্য', desc: 'JavaScript দিয়ে একটি সুন্দর কাউন্টডাউন টাইমার কোড লিখে দাও' },
+          { title: 'মার্কেটিং আইডিয়া', desc: 'অনলাইন কাপড়ের ব্যবসার জন্য ৫টি সেরা মার্কেটিং কৌশল বলো' },
+          { title: 'সহজ ব্যাখ্যা', desc: 'আর্টিফিশিয়াল ইন্টেলিজেন্স কীভাবে কাজ করে সহজ বাংলায় বুঝিয়ে বলো' }
+        ]
+      },
+      en: {
+        newChat: 'New Chat',
+        clearHistory: 'Clear All History',
+        welcomeTitle: 'How can I help you today?',
+        welcomeSub: 'Ask any question, write code, draft emails, or brainstorm new ideas.',
+        placeholder: 'Message NexusAI...',
+        disclaimer: 'NexusAI can make mistakes. Verify important information.',
+        langSwitch: 'বাংলা',
+        prompts: [
+          { title: 'Business Email', desc: 'Write a professional project update email to a client' },
+          { title: 'Coding Help', desc: 'Write a clean countdown timer in JavaScript' },
+          { title: 'Marketing Ideas', desc: 'Give me 5 effective marketing strategies for an online store' },
+          { title: 'Simple Explanation', desc: 'Explain how Artificial Intelligence works in simple terms' }
+        ]
+      }
+    };
+
+    function applyLanguage() {
+      const t = i18n[currentLang];
+      document.getElementById('new-chat-text').innerText = t.newChat;
+      document.getElementById('clear-history-text').innerText = t.clearHistory;
+      document.getElementById('welcome-title').innerText = t.welcomeTitle;
+      document.getElementById('welcome-sub').innerText = t.welcomeSub;
+      document.getElementById('user-input').placeholder = t.placeholder;
+      document.getElementById('footer-disclaimer').innerText = t.disclaimer;
+      document.getElementById('lang-btn').innerText = t.langSwitch;
+
+      const promptsContainer = document.getElementById('prompt-suggestions');
+      promptsContainer.innerHTML = t.prompts.map(p => `
+        <button onclick="usePrompt('${p.desc}')" class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 bg-white dark:bg-slate-900/60 transition text-left">
+          <div class="font-semibold text-sm text-emerald-600 dark:text-emerald-400">${p.title}</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">${p.desc}</div>
+        </button>
+      `).join('');
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'bn' ? 'en' : 'bn';
+      localStorage.setItem('nexus_lang', currentLang);
+      applyLanguage();
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      const isDark = html.classList.contains('dark');
+      document.getElementById('theme-btn').innerText = isDark ? '☀️' : '🌙';
+      localStorage.setItem('nexus_theme', isDark ? 'dark' : 'light');
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    }
+
+    function saveChats() {
+      localStorage.setItem('nexus_chats', JSON.stringify(chats));
+      renderChatHistory();
+    }
+
+    function renderChatHistory() {
+      const list = document.getElementById('chat-history-list');
+      list.innerHTML = chats.map(chat => `
+        <div onclick="loadChat('${chat.id}')" class="group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-sm transition ${chat.id === activeChatId ? 'bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 font-medium' : 'hover:bg-slate-200/70 dark:hover:bg-slate-800/70'}">
+          <span class="truncate pr-2">${chat.title}</span>
+          <button onclick="deleteChat(event, '${chat.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function createNewChat() {
+      activeChatId = null;
+      document.getElementById('messages-container').innerHTML = '';
+      document.getElementById('messages-container').appendChild(createWelcomeNode());
+      applyLanguage();
+      renderChatHistory();
+    }
+
+    function createWelcomeNode() {
+      const div = document.createElement('div');
+      div.id = 'welcome-screen';
+      div.className = 'max-w-2xl mx-auto mt-12 text-center space-y-6';
+      div.innerHTML = `
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-600/10 text-emerald-500 flex items-center justify-center text-3xl font-bold border border-emerald-500/20">AI</div>
+        <h1 id="welcome-title" class="text-2xl sm:text-3xl font-bold"></h1>
+        <p id="welcome-sub" class="text-slate-500 dark:text-slate-400 text-sm sm:text-base"></p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left pt-4" id="prompt-suggestions"></div>
+      `;
+      return div;
+    }
+
+    function loadChat(id) {
+      activeChatId = id;
+      const chat = chats.find(c => c.id === id);
+      if (!chat) return;
+      const container = document.getElementById('messages-container');
+      container.innerHTML = '';
+      chat.messages.forEach(m => appendMessageUI(m.role, m.content));
+      renderChatHistory();
+    }
+
+    function deleteChat(e, id) {
+      e.stopPropagation();
+      chats = chats.filter(c => c.id !== id);
+      if (activeChatId === id) createNewChat();
+      saveChats();
+    }
+
+    function clearAllChats() {
+      chats = [];
+      saveChats();
+      createNewChat();
+    }
+
+    function usePrompt(text) {
+      document.getElementById('user-input').value = text;
+      handleSend(new Event('submit'));
+    }
+
+    function handleEnter(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend(e);
+      }
+    }
+
+    function appendMessageUI(role, content) {
+      const welcome = document.getElementById('welcome-screen');
+      if (welcome) welcome.remove();
+
+      const container = document.getElementById('messages-container');
+      const wrapper = document.createElement('div');
+      wrapper.className = `max-w-3xl mx-auto flex gap-3 sm:gap-4 ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+      if (role === 'user') {
+        wrapper.innerHTML = `
+          <div class="bg-emerald-600 text-white px-4 py-3 rounded-2xl rounded-tr-sm max-w-[85%] text-sm sm:text-base whitespace-pre-wrap shadow-sm">${escapeHtml(content)}</div>
+        `;
+      } else {
+        const parsedHtml = marked.parse(content);
+        wrapper.innerHTML = `
+          <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-1">AI</div>
+          <div class="prose dark:prose-invert max-w-[85%] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-sm text-sm sm:text-base shadow-sm overflow-hidden">${parsedHtml}</div>
+        `;
+      }
+
+      container.appendChild(wrapper);
+      enhanceCodeBlocks(wrapper);
+      container.scrollTop = container.scrollHeight;
+      return wrapper;
+    }
+
+    function enhanceCodeBlocks(container) {
+      container.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightElement(block);
+        const pre = block.parentElement;
+        if (!pre.querySelector('.copy-btn')) {
+          const btn = document.createElement('button');
+          btn.className = 'copy-btn';
+          btn.innerText = 'Copy';
+          btn.onclick = () => {
+            navigator.clipboard.writeText(block.innerText);
+            btn.innerText = 'Copied!';
+            setTimeout(() => btn.innerText = 'Copy', 2000);
+          };
+          pre.appendChild(btn);
+        }
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text;
+      return div.innerHTML;
+    }
+
+    async function handleSend(e) {
+      e.preventDefault();
+      if (isGenerating) return;
+
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+
+      if (!activeChatId) {
+        activeChatId = Date.now().toString();
+        chats.unshift({ id: activeChatId, title: text.slice(0, 35), messages: [] });
+      }
+
+      const currentChat = chats.find(c => c.id === activeChatId);
+      currentChat.messages.push({ role: 'user', content: text });
+      appendMessageUI('user', text);
+      saveChats();
+
+      isGenerating = true;
+      document.getElementById('send-btn').disabled = true;
+
+      // Loading indicator
+      const loadingNode = appendMessageUI('assistant', currentLang === 'bn' ? 'চিন্তা করছি...' : 'Thinking...');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: currentChat.messages,
+            language: currentLang
+          })
+        });
+
+        const data = await res.json();
+        loadingNode.remove();
+
+        const replyText = data.reply || data.error || 'Error generating response.';
+        currentChat.messages.push({ role: 'assistant', content: replyText });
+        appendMessageUI('assistant', replyText);
+        saveChats();
+      } catch (err) {
+        loadingNode.remove();
+        appendMessageUI('assistant', currentLang === 'bn' ? 'নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।' : 'Network error. Please try again.');
+      } finally {
+        isGenerating = false;
+        document.getElementById('send-btn').disabled = false;
+      }
+    }
+
+    // Auto-resize textarea
+    const textarea = document.getElementById('user-input');
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Init
+    if (localStorage.getItem('nexus_theme') === 'light') toggleTheme();
+    applyLanguage();
+    renderChatHistory();
+  </script>
+</body>
+</html>
